@@ -173,7 +173,7 @@
             debugInfo.textContent = "cannot process, no file";
             canProcess = false;
         }
-        if(file.type != "image/png") {
+        if(!(file.type == "image/png" || file.type == "image/jpg" || file.type == "image/jpeg")) {
             debugInfo.textContent = "cannot process, must be png";
             canProcess = false;
         }
