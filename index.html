@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Upload and Process</title>
+    <style>
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 20px;
+        }
+        .button-container {
+            display: flex;
+            justify-content: flex-start;
+            width: 80%;
+            margin-bottom: 20px;
+        }
+        .image-container {
+            display: flex;
+            justify-content: space-around;
+            width: 80%;
+            margin: 20px 0;
+        }
+        .image-box {
+            width: 45%;
+            max-height: 500px;
+        }
+        .image-box img {
+            max-width: 100%;
+            max-height: 90%;
+            height: auto;
+            display: none;
+        }
+        .output-container {
+            display: flex;
+            flex-direction: column;
+            width: 80%;
+            margin: 20px 0;
+        }
+        textarea {
+            width: 100%;
+            height: 100px;
+            margin-top: 10px;
+            resize: none;
+        }
+        .small-input {
+            width: 50px;
+            margin-left: 5px;
+        }
+        .debug-label {
+            margin-top: 10px;
+            color: #555;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">        
+        <div class="button-container">
+            <input type="file" id="fileInput">
+        </div>
+        <div class="button-container">
+            <label for="colorNumInput">Number of colors: </label>
+            <input type="number" id="colorNumInput" class="small-input" min="0">
+        </div>
+        <div class="button-container">
+            <label for="iterationNumInput">Maximum iterations: </label>
+            <input type="number" id="iterationNumInput" class="small-input" min="0">
+        </div>
+        <div class="button-container">
+            <button id="processButton" disabled>Process Image</button>
+        </div>    
+        <div class="button-container">
+            <input type="checkbox" class="checkbox-input", id="makecodeModeCheckbox">
+            Makecode Mode
+        </div>
+        
+        <div class="image-container">
+            <div class="image-box">
+                <h3>Original Image</h3>
+                <img id="originalImage" src="" alt="Original Image">
+            </div>
+            <div class="image-box">
+                <h3>Processed Image</h3>
+                <img id="processedImage" src="" alt="Processed Image">
+            </div>
+        </div>
+    
+        <div class="output-container">
+            <textarea id="textOutput1" readonly placeholder="Text output 1"></textarea>
+            <textarea id="textOutput2" readonly placeholder="Text output 2"></textarea>
+        </div>
+        
+        <div class="debug-label" id="debugInfo">Debug information will be displayed here.</div>
+    </div>
+
+<script>
+    const fileInput = document.getElementById('fileInput');
+    const processButton = document.getElementById('processButton');
+    const originalImage = document.getElementById('originalImage');
+    const processedImage = document.getElementById('processedImage');
+    const colorNumInput = document.getElementById('colorNumInput');
+    const iterationNumInput = document.getElementById('iterationNumInput');
+    const textOutput1 = document.getElementById('textOutput1');
+    const textOutput2 = document.getElementById('textOutput2');
+    const debugInfo = document.getElementById('debugInfo');
+    const makecodeModeCheckbox = document.getElementById('makecodeModeCheckbox');
+
+    let file;
+    let canProcess = false;
+    let numColors = 1;
+    let maxIterations = 200;
+
+    fileInput.addEventListener('change', handleFileUpload);
+    processButton.addEventListener('click', handleImageProcessing);
+    colorNumInput.addEventListener('input', handleColorNumChange);
+    iterationNumInput.addEventListener('input', handleIterationNumChange);
+    makecodeModeCheckbox.addEventListener('change', handleMakecodeModeChange);
+
+    colorNumInput.value = numColors;
+    iterationNumInput.value = maxIterations;
+    textOutput1.disabled = true;
+    textOutput2.disabled = true;
+
+    function handleFileUpload() {
+        file = fileInput.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                originalImage.src = event.target.result;
+                originalImage.style.display = 'block'; // Show the original image
+                determineCanProcess();
+            };
+            reader.readAsDataURL(file);
+        }
+    }
+
+    function handleImageProcessing() {
+        processImage();
+    }
+
+    function handleColorNumChange() {
+        if(this.value <= 0)
+            this.value = 1
+        numColors = this.value;
+        determineCanProcess();
+    }
+
+    function handleIterationNumChange() {
+        if(this.value <= 0) {
+            this.value = 1;
+        }
+        maxIterations = this.value;
+        determineCanProcess();
+    }
+
+    function handleMakecodeModeChange() {
+        // do these two either way. if turned on needed. if turned off, nothing changes
+        colorNumInput.value = 15;
+        numColors = 15;
+
+        // enable and disable makecode exclusive elements
+        colorNumInput.disabled = makecodeModeCheckbox.checked;
+        textOutput1.disabled = !makecodeModeCheckbox.checked;
+        textOutput2.disabled = !makecodeModeCheckbox.checked;
+    }
+
+    function determineCanProcess() {
+        canProcess = true;
+        if(!file) {
+            debugInfo.textContent = "cannot process, no file";
+            canProcess = false;
+        }
+        if(file.type != "image/png") {
+            debugInfo.textContent = "cannot process, must be png";
+            canProcess = false;
+        }
+        debugInfo.textContent = "can process. filetype: " + file.type + ", colors: " + numColors;
+        processButton.disabled = !canProcess;
+    }
+
+    function processImage() {
+        textOutput1.value = "";
+        textOutput2.value = "";
+        
+        var canvas = document.createElement('canvas');
+        var context = canvas.getContext('2d');
+        var img = originalImage;
+        canvas.width = img.width;
+        canvas.height = img.height;
+        context.drawImage(img, 0, 0 );
+        var myData = context.getImageData(0, 0, img.width, img.height);
+         
+        getDataFromElement(originalImage).then(() => {
+            quantizeAndDisplay(numColors, maxIterations, processedImage, textOutput1, textOutput2, debugInfo, makecodeModeCheckbox.checked).then(() => {
+                processedImage.style.display = 'block'; 
+                debugInfo.textContent = "Completed";
+                console.log("done out here");
+            });
+        });
+    }
+
+</script>
+
+<script src="imageProcessing.js"></script>
+
+</body>
+</html>
