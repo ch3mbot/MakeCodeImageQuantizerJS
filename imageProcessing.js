@@ -35,30 +35,38 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 var Color = /** @class */ (function () {
-    function Color(r, g, b) {
+    function Color(r, g, b, a) {
         r = this.clampByte(r);
         g = this.clampByte(g);
         b = this.clampByte(b);
-        this.rgb = [r, g, b];
+        if (a == undefined)
+            a = 255;
+        a = this.clampByte(a);
+        this.rgba = [r, g, b, a];
     }
     Object.defineProperty(Color.prototype, "R", {
-        get: function () { return this.rgb[0]; },
+        get: function () { return this.rgba[0]; },
         enumerable: false,
         configurable: true
     });
     Object.defineProperty(Color.prototype, "G", {
-        get: function () { return this.rgb[1]; },
+        get: function () { return this.rgba[1]; },
         enumerable: false,
         configurable: true
     });
     Object.defineProperty(Color.prototype, "B", {
-        get: function () { return this.rgb[2]; },
+        get: function () { return this.rgba[2]; },
+        enumerable: false,
+        configurable: true
+    });
+    Object.defineProperty(Color.prototype, "A", {
+        get: function () { return this.rgba[3]; },
         enumerable: false,
         configurable: true
     });
     // clamp color value from 0-255
     Color.prototype.clampByte = function (v) { return Math.max(Math.min(v, 255), 0); };
-    // Hexadecimal representation
+    // Hexadecimal representation (no alpha)
     Color.prototype.toHex = function () {
         var toHexComponent = function (c) {
             var hex = c.toString(16);
@@ -66,13 +74,14 @@ var Color = /** @class */ (function () {
         };
         return "".concat(toHexComponent(this.R)).concat(toHexComponent(this.G)).concat(toHexComponent(this.B));
     };
-    // squared distance is used since holds for inqeualities
+    // squared distance is used since holds for inqeualities (no alpha)
     Color.prototype.distanceSqr = function (other) {
         var dR = this.R - other.R;
         var dG = this.G - other.G;
         var dB = this.B - other.B;
         return dR * dR + dG * dG + dB * dB;
     };
+    // check if two colors are the same (no alpha)
     Color.prototype.equals = function (other) {
         return (this.R == other.R) && (this.G == other.G) && (this.B == other.B);
     };
@@ -245,9 +254,9 @@ function getImageData(imageElement) {
         });
     });
 }
-function getDataFromElement(imgElement) {
+function getDataFromElement(imgElement, fast) {
     return __awaiter(this, void 0, void 0, function () {
-        var imageData, y, x, index, red, green, blue, alpha, color;
+        var imageData, y, x, index, red, green, blue, alpha, color, iX, iY, paletteProcessingColorData, y, x, index;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
@@ -263,12 +272,29 @@ function getDataFromElement(imgElement) {
                             green = imageData.data[index + 1];
                             blue = imageData.data[index + 2];
                             alpha = imageData.data[index + 3];
-                            color = new Color(red, green, blue);
+                            color = new Color(red, green, blue, alpha);
                             imageColorData.push(color);
                         }
                     }
+                    iX = 1;
+                    iY = 1;
+                    if (fast) {
+                        // round or floor? does it matter?
+                        iX = Math.round(width / 1000);
+                        iY = Math.round(height / 500);
+                    }
+                    paletteProcessingColorData = [];
+                    for (y = 0; y < height; y += iY) {
+                        for (x = 0; x < width; x += iX) {
+                            index = y * width + x;
+                            //do not add data that isn't full alpha #FIXME handling partial transparency
+                            if (imageColorData[index].A != 255)
+                                continue;
+                            paletteProcessingColorData.push(imageColorData[index]);
+                        }
+                    }
                     // setup k means calc
-                    KMeansCalc = new KMeansCalculator(imageColorData);
+                    KMeansCalc = new KMeansCalculator(paletteProcessingColorData);
                     return [2 /*return*/];
             }
         });
@@ -312,18 +338,22 @@ function quantizeAndDisplay(k, maxIterations, outputImgElement, outputPaletteTex
                 });
             });
         }
-        var palette, paletteText, i, outputImageColorData, outputImgString, temp, i, nearIndex;
+        var startTime, palette, endTime, paletteText, i, outputImageColorData, outputImgString, temp, lineSize, i, nearIndex;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
                     console.log("attempting quantizing");
+                    startTime = new Date().getTime();
                     return [4 /*yield*/, KMeansCalc.calculateKMeans(k, maxIterations, debugLabel)];
                 case 1:
                     palette = _a.sent();
+                    endTime = new Date().getTime();
+                    console.log("time for palette gen: " + (endTime - startTime));
+                    startTime = new Date().getTime();
                     if (makeCodeMode) {
                         paletteText = "namespace userconfig {\n    export const ARCADE_SCREEN_WIDTH = " + width + "\n    export const ARCADE_SCREEN_HEIGHT = " + height + "\n}\nimage.setPalette(hex`000000";
                         for (i = 0; i < palette.length; i++) {
-                            console.log(palette[i].R + ", " + palette[i].G + ", " + palette[i].B);
+                            //console.log(palette[i].R  + ", " + palette[i].G + ", " + palette[i].B);
                             paletteText += palette[i].toHex();
                         }
                         paletteText += "`);";
@@ -336,6 +366,7 @@ function quantizeAndDisplay(k, maxIterations, outputImgElement, outputPaletteTex
                         debugLabel.textContent = "Adding text: 0/" + height;
                     }
                     temp = "";
+                    lineSize = width * 200;
                     i = 0;
                     _a.label = 2;
                 case 2:
@@ -346,10 +377,12 @@ function quantizeAndDisplay(k, maxIterations, outputImgElement, outputPaletteTex
                         return [3 /*break*/, 4];
                     // make text show up in chunks
                     temp += (nearIndex + 1).toString(16);
-                    if (!(i % width == 0)) return [3 /*break*/, 4];
+                    if (i % width == 0 && i != 0)
+                        temp += "\n";
+                    if (!(i % lineSize == 0)) return [3 /*break*/, 4];
                     if ((i / width) % 50 == 0)
                         debugLabel.textContent = "Adding text: " + (i / width) + "/" + height;
-                    return [4 /*yield*/, insertPiece(temp + "\n")];
+                    return [4 /*yield*/, insertPiece(temp)];
                 case 3:
                     _a.sent();
                     temp = "";
@@ -360,6 +393,9 @@ function quantizeAndDisplay(k, maxIterations, outputImgElement, outputPaletteTex
                 case 5:
                     if (makeCodeMode)
                         outputImageTextElement.value += "`, SpriteKind.Player);";
+                    endTime = new Date().getTime();
+                    console.log("time for text gen: " + (endTime - startTime));
+                    startTime = new Date().getTime();
                     console.log("Done text");
                     displayImageFromArray(outputImageColorData, outputImgElement);
                     return [2 /*return*/];

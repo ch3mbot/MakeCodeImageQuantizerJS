@@ -1,21 +1,27 @@
 class Color {
-    public rgb: [number, number, number];
+    public rgba: [number, number, number, number];
 
-    constructor(r: number, g: number, b: number) {
+    constructor(r: number, g: number, b: number, a?: number) {
         r = this.clampByte(r);
         g = this.clampByte(g);
         b = this.clampByte(b);
-        this.rgb = [r, g, b];
+
+        if(a == undefined)
+            a = 255;
+        a = this.clampByte(a);
+        
+        this.rgba = [r, g, b, a];
     }
 
-    public get R(): number { return this.rgb[0]; }
-    public get G(): number { return this.rgb[1]; }
-    public get B(): number { return this.rgb[2]; }
+    public get R(): number { return this.rgba[0]; }
+    public get G(): number { return this.rgba[1]; }
+    public get B(): number { return this.rgba[2]; }
+    public get A(): number { return this.rgba[3]; }
 
     // clamp color value from 0-255
     private clampByte(v: number) { return Math.max(Math.min(v, 255), 0);}
 
-    // Hexadecimal representation
+    // Hexadecimal representation (no alpha)
     toHex(): string {
         const toHexComponent = (c: number) => {
             const hex = c.toString(16);
@@ -25,7 +31,7 @@ class Color {
         return `${toHexComponent(this.R)}${toHexComponent(this.G)}${toHexComponent(this.B)}`;
     }
 
-    // squared distance is used since holds for inqeualities
+    // squared distance is used since holds for inqeualities (no alpha)
     public distanceSqr(other: Color): number {
         let dR = this.R - other.R;
         let dG = this.G - other.G;
@@ -33,6 +39,7 @@ class Color {
         return dR * dR + dG * dG + dB * dB;
     }
 
+    // check if two colors are the same (no alpha)
     public equals(other: Color): boolean {
         return (this.R == other.R) && (this.G == other.G) && (this.B == other.B);
     }
@@ -204,24 +211,45 @@ async function getImageData(imageElement: HTMLImageElement): Promise<ImageData> 
     return ctx.getImageData(0, 0, canvas.width, canvas.height);
 }
 
-async function getDataFromElement(imgElement: HTMLImageElement) {
+async function getDataFromElement(imgElement: HTMLImageElement, fast: boolean) {
     console.log("processing data from element");
     let imageData = await getImageData(imgElement);
-    imageColorData = [];
+    imageColorData= [];
+
     for(let y = 0; y < height; y++) {
         for(let x = 0; x < width; x++) {
             let index = (y * width + x) * 4; // each pixel is 4 array elements (R, G, B, A)
             let red = imageData.data[index];
             let green = imageData.data[index + 1];
             let blue = imageData.data[index + 2];
-            let alpha = imageData.data[index + 3]; // do nothing with alpha
-            let color = new Color(red, green, blue);
+            let alpha = imageData.data[index + 3]; 
+            let color = new Color(red, green, blue, alpha);
             imageColorData.push(color);
         }
     }
 
+    // sample data less often for images larger than 1000x500 pixels
+    let iX = 1;
+    let iY = 1;
+    if(fast) {
+        // round or floor? does it matter?
+        iX = Math.round(width / 1000);
+        iY = Math.round(height / 500);
+    }
+
+    let paletteProcessingColorData: Color[] = [];
+    for(let y = 0; y < height; y += iY) {
+        for(let x = 0; x < width; x += iX) {
+            let index = y * width + x;
+            //do not add data that isn't full alpha #FIXME handling partial transparency
+            if(imageColorData[index].A != 255)
+                continue;
+            paletteProcessingColorData.push(imageColorData[index]);
+        }
+    }
+
     // setup k means calc
-    KMeansCalc = new KMeansCalculator(imageColorData);
+    KMeansCalc = new KMeansCalculator(paletteProcessingColorData);
 }
 
 function displayImageFromArray(colors: Color[], displayElement: HTMLImageElement) {
@@ -251,12 +279,18 @@ function displayImageFromArray(colors: Color[], displayElement: HTMLImageElement
 async function quantizeAndDisplay(k: number, maxIterations: number, outputImgElement: HTMLImageElement, outputPaletteTextElement: HTMLTextAreaElement, outputImageTextElement: HTMLTextAreaElement, debugLabel: HTMLLabelElement, makeCodeMode: boolean) {
     console.log("attempting quantizing");
     
+    let startTime = new Date().getTime();
+    
     let palette: Color[] = await KMeansCalc.calculateKMeans(k, maxIterations, debugLabel);
+
+    let endTime = new Date().getTime();
+    console.log("time for palette gen: " + (endTime - startTime));
+    startTime = new Date().getTime();
 
     if(makeCodeMode) {
         let paletteText = "namespace userconfig {\n    export const ARCADE_SCREEN_WIDTH = " + width + "\n    export const ARCADE_SCREEN_HEIGHT = " + height + "\n}\nimage.setPalette(hex`000000";
         for(let i = 0; i < palette.length; i++) {
-            console.log(palette[i].R  + ", " + palette[i].G + ", " + palette[i].B);
+            //console.log(palette[i].R  + ", " + palette[i].G + ", " + palette[i].B);
             paletteText += palette[i].toHex();
         }
         paletteText += "`);";
@@ -280,6 +314,7 @@ async function quantizeAndDisplay(k: number, maxIterations: number, outputImgEle
     }
 
     let temp = ""
+    let lineSize = width * 200;
     for(let i = 0; i < imageColorData.length; i++) {
         let nearIndex = imageColorData[i].nearestInPaletteIndex(palette);
         outputImageColorData.push(palette[nearIndex]);
@@ -289,16 +324,21 @@ async function quantizeAndDisplay(k: number, maxIterations: number, outputImgEle
 
         // make text show up in chunks
         temp += (nearIndex + 1).toString(16);
+        if(i % width == 0 && i != 0)
+            temp += "\n";
 
-        if(i % width == 0) {
+        if(i % lineSize == 0) {
             if((i / width) % 50 == 0) 
                 debugLabel.textContent = "Adding text: " + (i / width) + "/" + height;
-            await insertPiece(temp + "\n");
+            await insertPiece(temp);
             temp = ""
         }
     }
     if(makeCodeMode)
         outputImageTextElement.value += "`, SpriteKind.Player);";
+    endTime = new Date().getTime();
+    console.log("time for text gen: " + (endTime - startTime));
+    startTime = new Date().getTime();
     console.log("Done text");
     displayImageFromArray(outputImageColorData, outputImgElement);
 }

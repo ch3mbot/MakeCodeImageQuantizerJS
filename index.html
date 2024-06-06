@@ -49,9 +49,71 @@
             width: 50px;
             margin-left: 5px;
         }
+        .debug-label-container {
+            display: flex;
+            justify-content: flex-start;
+            width: 80%;
+        }
         .debug-label {
             margin-top: 10px;
             color: #555;
+            text-align: left;
+            margin-left: 0;
+            padding-left: 0;
+        }
+        .copy-clipboard-container {
+            display: flex;
+            justify-content: flex-start;
+            width: 80%;
+        }
+        .switch-container {
+            display: flex;
+            justify-content: flex-start;
+            margin-bottom: 10px;
+            width: 80%;
+        }
+        .switch-label {
+            margin: 0 5px;
+            font-size: 16px;
+        }
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 30px; /* Half the width */
+            height: 17px; /* Half the height */
+        }
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #118afc;
+            transition: .4s;
+            border-radius: 17px; /* Adjusted to match new size */
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 13px; /* Adjusted to match new size */
+            width: 13px; /* Adjusted to match new size */
+            left: 2px;
+            bottom: 2px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        input:checked + .slider {
+            background-color: #882d17;
+        }
+        input:checked + .slider:before {
+            transform: translateX(13px); /* Adjusted to match new size */
         }
     </style>
 </head>
@@ -76,7 +138,20 @@
             <input type="checkbox" class="checkbox-input", id="makecodeModeCheckbox">
             Makecode Mode
         </div>
-        
+
+        <div class="switch-container">
+            <label class="switch-label" for="toggleSwitch">Fast</label>
+            <label class="switch">
+                <input type="checkbox" id="toggleSwitch">
+                <span class="slider"></span>
+            </label>
+            <label class="switch-label" for="toggleSwitch">Accurate</label>
+        </div>
+
+        <div class="debug-label-container">
+            <div class="debug-label" id="debugInfo"> Debug information will be displayed here. </div>
+        </div>
+
         <div class="image-container">
             <div class="image-box">
                 <h3>Original Image</h3>
@@ -88,12 +163,16 @@
             </div>
         </div>
     
+        <div class="copy-clipboard-container">
+            <button id="copyImgConfig" disabled> Copy palette config to clipboard</button>
+            <button id="copyImgFull" disabled> Copy sprite code to clipboard</button>
+        </div>
+
         <div class="output-container">
-            <textarea id="textOutput1" readonly placeholder="Text output 1"></textarea>
-            <textarea id="textOutput2" readonly placeholder="Text output 2"></textarea>
+            <textarea id="textOutput1" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" readonly placeholder="Text output 1"></textarea>
+            <textarea id="textOutput2" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" readonly placeholder="Text output 2"></textarea>
         </div>
         
-        <div class="debug-label" id="debugInfo">Debug information will be displayed here.</div>
     </div>
 
 <script>
@@ -107,6 +186,9 @@
     const textOutput2 = document.getElementById('textOutput2');
     const debugInfo = document.getElementById('debugInfo');
     const makecodeModeCheckbox = document.getElementById('makecodeModeCheckbox');
+    const fastModeToggle = document.getElementById("toggleSwitch");
+    const copyImgConfigButton = document.getElementById("copyImgConfig");
+    const copyImgFullButton = document.getElementById("copyImgFull");
 
     let file;
     let canProcess = false;
@@ -118,12 +200,16 @@
     colorNumInput.addEventListener('input', handleColorNumChange);
     iterationNumInput.addEventListener('input', handleIterationNumChange);
     makecodeModeCheckbox.addEventListener('change', handleMakecodeModeChange);
+    fastModeToggle.addEventListener('change', determineCanProcess);
+
+    copyImgConfigButton.addEventListener('click', copyImgConfigClicked);
+    copyImgFullButton.addEventListener('click', copyImgFullClicked);
 
     colorNumInput.value = numColors;
     iterationNumInput.value = maxIterations;
     textOutput1.disabled = true;
     textOutput2.disabled = true;
-
+    
     function handleFileUpload() {
         file = fileInput.files[0];
         if (file) {
@@ -165,19 +251,50 @@
         colorNumInput.disabled = makecodeModeCheckbox.checked;
         textOutput1.disabled = !makecodeModeCheckbox.checked;
         textOutput2.disabled = !makecodeModeCheckbox.checked;
+        copyImgConfigButton.disabled = !makecodeModeCheckbox.checked || (textOutput1.value[0] == "" || textOutput1.value[0] == null);
+        copyImgFullButton.disabled =  !makecodeModeCheckbox.checked || (textOutput2.value[0] == "" || textOutput2.value[0] == null);
     }
+
+    function copyImgConfigClicked() {
+        navigator.clipboard.writeText(textOutput1.value)
+        .then(function() {
+            alert("Palette config text copied to clipboard successfully!");
+        })
+        .catch(function(err) {
+            alert("Failed to copy text to clipboard");
+        });
+    }
+    function copyImgFullClicked() {
+        navigator.clipboard.writeText(textOutput2.value)
+        .then(function() {
+            alert("Palette config text copied to clipboard successfully!");
+        })
+        .catch(function(err) {
+            alert("Failed to copy text to clipboard");
+        });
+    }
+
+    const validFileTypes = [
+        "image/png",
+        "image/jpg",
+        "image/jpeg",
+        "image/bmp",
+        "image/tiff",
+        "image/svg+xml",
+        "image/webp",
+    ];
 
     function determineCanProcess() {
         canProcess = true;
         if(!file) {
-            debugInfo.textContent = "cannot process, no file";
+            debugInfo.textContent = "Cannot process, no file.";
             canProcess = false;
         }
-        if(!(file.type == "image/png" || file.type == "image/jpg" || file.type == "image/jpeg")) {
-            debugInfo.textContent = "cannot process, must be png";
+        if(validFileTypes.indexOf(file.type + "") < 0) {
+            debugInfo.textContent = "Cannot process, wrong file type.";
             canProcess = false;
         }
-        debugInfo.textContent = "can process. filetype: " + file.type + ", colors: " + numColors;
+        debugInfo.textContent = "Can process. Filetype: " + file.type + ". Colors: " + numColors + ". Mode: " + (fastModeToggle.checked ? "Accurate" : "Fast") + ".";
         processButton.disabled = !canProcess;
     }
 
@@ -185,6 +302,16 @@
         textOutput1.value = "";
         textOutput2.value = "";
         
+        copyImgConfigButton.disabled = true;
+        copyImgFullButton.disabled = true;
+
+        processButton.disabled = true;
+        fileInput.disabled = true;
+        colorNumInput.disabled = true;
+        iterationNumInput.disabled = true;
+        fastModeToggle.disabled = true;
+        makecodeModeCheckbox.disabled = true;
+
         var canvas = document.createElement('canvas');
         var context = canvas.getContext('2d');
         var img = originalImage;
@@ -193,11 +320,23 @@
         context.drawImage(img, 0, 0 );
         var myData = context.getImageData(0, 0, img.width, img.height);
          
-        getDataFromElement(originalImage).then(() => {
+        getDataFromElement(originalImage, !fastModeToggle.checked).then(() => {
             quantizeAndDisplay(numColors, maxIterations, processedImage, textOutput1, textOutput2, debugInfo, makecodeModeCheckbox.checked).then(() => {
                 processedImage.style.display = 'block'; 
                 debugInfo.textContent = "Completed";
                 console.log("done out here");
+
+                processButton.disabled = false;
+                fileInput.disabled = false;
+                colorNumInput.disabled = makecodeModeCheckbox.checked;
+                iterationNumInput.disabled = false;
+                fastModeToggle.disabled = false;
+                makecodeModeCheckbox.disabled = false;
+
+                if(makecodeModeCheckbox.checked) {
+                    copyImgConfigButton.disabled = false;
+                    copyImgFullButton.disabled = false;
+                }
             });
         });
     }
