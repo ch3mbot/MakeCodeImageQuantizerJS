@@ -3,208 +3,300 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Image Upload and Process</title>
+    <title>UI Elements</title>
     <style>
-        .container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            margin-top: 20px;
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
         }
-        .button-container {
-            display: flex;
-            justify-content: flex-start;
-            width: 80%;
+        .container {
+            margin-top: 20px;
             margin-bottom: 20px;
         }
-        .image-container {
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        .toggle-switch {
+            display: flex;
+            align-items: center;
+        }
+        .toggle-switch input {
+            display: none;
+        }
+        .toggle-switch label {
+            cursor: pointer;
+            padding: 5px 10px;
+            border: 1px solid #ccc;
+            user-select: none;
+        }
+        .toggle-switch .switch {
+            display: flex;
+        }
+        .toggle-switch input:checked + .switch label:nth-child(2),
+        .toggle-switch input:not(:checked) + .switch label:nth-child(1) {
+            background-color: #ddd;
+            font-weight: bold;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            gap: 10px;
+        }
+        .grid div {
+            padding: 10px;
+            border: 1px solid #ccc;
+        }
+        .grid div select,
+        .grid div input[type="color"] {
+            display: block;
+            margin-top: 5px;
+        }
+        .side-by-side {
+            display: flex;
+            gap: 20px;
+        }
+        .side-by-side div {
+            flex: 1;
+            text-align: center;
+        }
+        .side-by-side img {
+            max-width: 100%;
+            border: 1px solid #ccc;
+        }
+        .option {
+            cursor: pointer;
+            padding: 10px;
+            border: 1px solid #ccc;
+            display: inline-block;
+            margin: 5px;
+        }
+        .option.selected {
+            background-color: #ddd;
+        }
+        .color-select-container {
+            display: grid;
+            width: min(1600px, 100%);    
+            grid-template-columns: repeat(8, 1fr);
+            gap: 10px;
+        }
+        .color-select-container select,
+        .color-select-container button,
+        .color-select-container input[type="color"] {
+            width: 95%;
+            box-sizing: border-box; 
+        }
+        .output-image-container {
             display: flex;
             justify-content: space-around;
             width: 80%;
             margin: 20px 0;
         }
-        .image-box {
+        .output-image-container-image {
             width: 45%;
             max-height: 500px;
         }
-        .image-box img {
+        .output-image-container-image img {
             max-width: 100%;
             max-height: 90%;
             height: auto;
             display: none;
         }
-        .output-container {
-            display: flex;
-            flex-direction: column;
-            width: 80%;
-            margin: 20px 0;
-        }
-        textarea {
-            width: 100%;
-            height: 100px;
-            margin-top: 10px;
-            resize: none;
-        }
-        .small-input {
-            width: 50px;
-            margin-left: 5px;
-        }
-        .debug-label {
-            margin-top: 10px;
-            color: #555;
-        }
     </style>
 </head>
 <body>
-
-    <div class="container">        
-        <div class="button-container">
-            <input type="file" id="fileInput">
-        </div>
-        <div class="button-container">
-            <label for="colorNumInput">Number of colors: </label>
-            <input type="number" id="colorNumInput" class="small-input" min="0">
-        </div>
-        <div class="button-container">
-            <label for="iterationNumInput">Maximum iterations: </label>
-            <input type="number" id="iterationNumInput" class="small-input" min="0">
-        </div>
-        <div class="button-container">
-            <button id="processButton" disabled>Process Image</button>
-        </div>    
-        <div class="button-container">
-            <input type="checkbox" class="checkbox-input", id="makecodeModeCheckbox">
-            Makecode Mode
-        </div>
-        
-        <div class="image-container">
-            <div class="image-box">
-                <h3>Original Image</h3>
-                <img id="originalImage" src="" alt="Original Image">
-            </div>
-            <div class="image-box">
-                <h3>Processed Image</h3>
-                <img id="processedImage" src="" alt="Processed Image">
-            </div>
-        </div>
-    
-        <div class="output-container">
-            <textarea id="textOutput1" readonly placeholder="Text output 1"></textarea>
-            <textarea id="textOutput2" readonly placeholder="Text output 2"></textarea>
-        </div>
-        
-        <div class="debug-label" id="debugInfo">Debug information will be displayed here.</div>
+    <div class="container">
+        <button id="info-button">How to use</button>
+    </div>
+    <div class="container">
+        <label for="file-upload">File Upload:</label>
+        <input type="file" id="file-upload">
     </div>
 
-<script>
-    const fileInput = document.getElementById('fileInput');
-    const processButton = document.getElementById('processButton');
-    const originalImage = document.getElementById('originalImage');
-    const processedImage = document.getElementById('processedImage');
-    const colorNumInput = document.getElementById('colorNumInput');
-    const iterationNumInput = document.getElementById('iterationNumInput');
-    const textOutput1 = document.getElementById('textOutput1');
-    const textOutput2 = document.getElementById('textOutput2');
-    const debugInfo = document.getElementById('debugInfo');
-    const makecodeModeCheckbox = document.getElementById('makecodeModeCheckbox');
+    <div class="container">
+        <div class="toggle-switch">
+            <input type="checkbox" id="toggle-switch">
+            <div class="switch">
+                <label for="toggle-switch">Fast</label>
+                <label for="toggle-switch">Accurate</label>
+            </div>
+        </div>
+    </div>
 
-    let file;
-    let canProcess = false;
-    let numColors = 1;
-    let maxIterations = 200;
+    <div class="container">
+        <label for="max-iterations">Max Iterations:</label>
+        <input type="number" id="max-iterations" min="1" max="500" value="200">
+    </div>
+    <div class="container">
+        <label>Output Resolution:</label>
+        <label class="option">
+            <input type="radio" name="option" value="1" onclick="selectOption(1)" checked>
+            Input Resolution
+        </label>
+        <div></div>
+        <label class="option">
+            <input type="radio" name="option" value="2" onclick="selectOption(2)"> 
+            Custom Scale
+            <input type="number" id="custom-scale" value="1" step="0.1" disabled>
+        </label>
+        <div></div>
+        <label class="option">
+            <input type="radio" name="option" value="3" onclick="selectOption(3)">
+            Custom Width & Height
+            <div></div>
+            <input type="number" id="custom-width" min="1" value="1" disabled>
+            x
+            <input type="number" id="custom-height" min="1" value="1" disabled>
+        </label>
+    </div>
 
-    fileInput.addEventListener('change', handleFileUpload);
-    processButton.addEventListener('click', handleImageProcessing);
-    colorNumInput.addEventListener('input', handleColorNumChange);
-    iterationNumInput.addEventListener('input', handleIterationNumChange);
-    makecodeModeCheckbox.addEventListener('change', handleMakecodeModeChange);
+    <div class="color-select-container">
+        <div>
+            <button id="all-default-button">Set all to default</button>
+            <button id="all-generate-button">Set all to generate</button>
+        </div>
+        <div>
+            <select id="select-1">
+                <option value="generate">Generate</option>
+                <option value="custom">Custom</option>
+                <option value="default">Default</option>
+            </select>
+            <input type="color" id="color-1">
+        </div>
+        <div>
+            <select id="select-2">
+                <option value="generate">Generate</option>
+                <option value="custom">Custom</option>
+                <option value="default">Default</option>
+            </select>
+            <input type="color" id="color-2">
+        </div>
+        <div>
+            <select id="select-3">
+                <option value="generate">Generate</option>
+                <option value="custom">Custom</option>
+                <option value="default">Default</option>
+            </select>
+            <input type="color" id="color-3">
+        </div>
+        <div>
+            <select id="select-4">
+                <option value="generate">Generate</option>
+                <option value="custom">Custom</option>
+                <option value="default">Default</option>
+            </select>
+            <input type="color" id="color-4">
+        </div>
+        <div>
+            <select id="select-5">
+                <option value="generate">Generate</option>
+                <option value="custom">Custom</option>
+                <option value="default">Default</option>
+            </select>
+            <input type="color" id="color-5">
+        </div>
+        <div>
+            <select id="select-6">
+                <option value="generate">Generate</option>
+                <option value="custom">Custom</option>
+                <option value="default">Default</option>
+            </select>
+            <input type="color" id="color-6">
+        </div>
+        <div>
+            <select id="select-7">
+                <option value="generate">Generate</option>
+                <option value="custom">Custom</option>
+                <option value="default">Default</option>
+            </select>
+            <input type="color" id="color-7">
+        </div>
+        <div>
+            <select id="select-8">
+                <option value="generate">Generate</option>
+                <option value="custom">Custom</option>
+                <option value="default">Default</option>
+            </select>
+            <input type="color" id="color-8">
+        </div>
+        <div>
+            <select id="select-9">
+                <option value="generate">Generate</option>
+                <option value="custom">Custom</option>
+                <option value="default">Default</option>
+            </select>
+            <input type="color" id="color-9">
+        </div>
+        <div>
+            <select id="select-10">
+                <option value="generate">Generate</option>
+                <option value="custom">Custom</option>
+                <option value="default">Default</option>
+            </select>
+            <input type="color" id="color-10">
+        </div>
+        <div>
+            <select id="select-11">
+                <option value="generate">Generate</option>
+                <option value="custom">Custom</option>
+                <option value="default">Default</option>
+            </select>
+            <input type="color" id="color-11">
+        </div>
+        <div>
+            <select id="select-12">
+                <option value="generate">Generate</option>
+                <option value="custom">Custom</option>
+                <option value="default">Default</option>
+            </select>
+            <input type="color" id="color-12">
+        </div>
+        <div>
+            <select id="select-13">
+                <option value="generate">Generate</option>
+                <option value="custom">Custom</option>
+                <option value="default">Default</option>
+            </select>
+            <input type="color" id="color-13">
+        </div>
+        <div>
+            <select id="select-14">
+                <option value="generate">Generate</option>
+                <option value="custom">Custom</option>
+                <option value="default">Default</option>
+            </select>
+            <input type="color" id="color-14">
+        </div>
+        <div>
+            <select id="select-15">
+                <option value="generate">Generate</option>
+                <option value="custom">Custom</option>
+                <option value="default">Default</option>
+            </select>
+            <input type="color" id="color-15">
+        </div>
+    </div>
+    <div class="container">
+        <button id="generate-palette">Generate Palette</button>
+        <button id="apply-palette">Apply Palette</button>
+    </div>
 
-    colorNumInput.value = numColors;
-    iterationNumInput.value = maxIterations;
-    textOutput1.disabled = true;
-    textOutput2.disabled = true;
+    <div class="container">
+        <label id="debugText">Debug Text</label>
+    </div>
 
-    function handleFileUpload() {
-        file = fileInput.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = function(event) {
-                originalImage.src = event.target.result;
-                originalImage.style.display = 'block'; // Show the original image
-                determineCanProcess();
-            };
-            reader.readAsDataURL(file);
-        }
-    }
+    <div class="output-image-container">
+        <div class="output-image-container-image">
+            <h3>Original Image</h3>
+            <img src="original.jpg" alt="Original Image" id="original-image">
+        </div>
+        <div class="output-image-container-image">
+            <h3>Processed Image</h3>
+            <img src="processed.jpg" alt="Processed Image" id="processed-image">
+        </div>
+    </div>
 
-    function handleImageProcessing() {
-        processImage();
-    }
-
-    function handleColorNumChange() {
-        if(this.value <= 0)
-            this.value = 1
-        numColors = this.value;
-        determineCanProcess();
-    }
-
-    function handleIterationNumChange() {
-        if(this.value <= 0) {
-            this.value = 1;
-        }
-        maxIterations = this.value;
-        determineCanProcess();
-    }
-
-    function handleMakecodeModeChange() {
-        // do these two either way. if turned on needed. if turned off, nothing changes
-        colorNumInput.value = 15;
-        numColors = 15;
-
-        // enable and disable makecode exclusive elements
-        colorNumInput.disabled = makecodeModeCheckbox.checked;
-        textOutput1.disabled = !makecodeModeCheckbox.checked;
-        textOutput2.disabled = !makecodeModeCheckbox.checked;
-    }
-
-    function determineCanProcess() {
-        canProcess = true;
-        if(!file) {
-            debugInfo.textContent = "cannot process, no file";
-            canProcess = false;
-        }
-        if(!(file.type == "image/png" || file.type == "image/jpg" || file.type == "image/jpeg")) {
-            debugInfo.textContent = "cannot process, must be png";
-            canProcess = false;
-        }
-        debugInfo.textContent = "can process. filetype: " + file.type + ", colors: " + numColors;
-        processButton.disabled = !canProcess;
-    }
-
-    function processImage() {
-        textOutput1.value = "";
-        textOutput2.value = "";
-        
-        var canvas = document.createElement('canvas');
-        var context = canvas.getContext('2d');
-        var img = originalImage;
-        canvas.width = img.width;
-        canvas.height = img.height;
-        context.drawImage(img, 0, 0 );
-        var myData = context.getImageData(0, 0, img.width, img.height);
-         
-        getDataFromElement(originalImage).then(() => {
-            quantizeAndDisplay(numColors, maxIterations, processedImage, textOutput1, textOutput2, debugInfo, makecodeModeCheckbox.checked).then(() => {
-                processedImage.style.display = 'block'; 
-                debugInfo.textContent = "Completed";
-                console.log("done out here");
-            });
-        });
-    }
-
-</script>
-
-<script src="imageProcessing.js"></script>
-
+    <script src="indexhandling.js"></script>
+    <script src="imageProcessing.js"></script>
 </body>
 </html>
