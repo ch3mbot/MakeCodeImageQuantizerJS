@@ -17,12 +17,15 @@ for (let i = 1; i <= 15; i++) {
 }
 
 const generatePaletteButton = document.getElementById('generate-palette');
+const applyPaletteButton = document.getElementById('apply-palette');
 const debugText = document.getElementById('debugText');
 const originalImage = document.getElementById('original-image');
 const processedImage = document.getElementById('processed-image');
 
 const allDefaultButton = document.getElementById('all-default-button');
 const allGenerateButton = document.getElementById('all-generate-button');
+
+const infoButton = document.getElementById('info-button');
 
 // some config variables 
 const validFileTypes = [
@@ -46,7 +49,7 @@ let speedMode = true;
 let maxIterations = 200;
 let targetResolution = [1, 1];
 let genColorNum = 15;
-let genColorIndices = [true, true, true, true, true, true, true, true, true, true, true, true,true, true, true];
+let genColorIndices = [true, true, true, true, true, true, true, true, true, true, true, true, true, true, true];
 let fullColorPalette = ["#ffffff","#ff2121","#ff93c4","#ff8135","#fff609","#249ca3","#78dc52","#003fad","#87f2ff","#8e2ec4","#a4839f","#5c406c","#e5cdc4","#91463d","#000000"];
 
 // data from image
@@ -60,20 +63,64 @@ function setTargetRes(x, y) {
     console.log("targetResolution set to: " + targetResolution[0] + ", " + targetResolution[1]);
 }
 
+// cannot process until an image is uploaded
+generatePaletteButton.disabled = true;
+applyPaletteButton.disabled = true;
+
+// instructions on how to use 
+infoButton.addEventListener('change', function() {
+
+})
+
 // handling number input changes
 fileUploadInput.addEventListener('change', function() {
     file = fileUploadInput.files[0];
     if (file) {
+        originalImage.style.display = 'none'
+        processedImage.style.display = 'none'
         const reader = new FileReader();
         reader.onload = function(event) {
-            originalImage.src = event.target.result;
-            originalImage.style.display = 'block'; 
-            getDataFromAllFields();
+            if (determineCanProcess()[1]) {
+                originalImage.src = event.target.result;
+                originalImage.style.display = 'block'; 
+                var img = new Image();
+                img.src = event.target.result;  
+                img.onload = function () {
+                    imageWidth = img.width;
+                    imageHeight = img.height;
+                    customWidthInput.value = imageWidth;
+                    customHeightInput.value = imageHeight;
+                    console.log("width: " + imageWidth + " height: " + imageHeight)
+                }
+            }
         };
         reader.readAsDataURL(file);
         console.log("new file of type " + file.type + " uploaded")
     }
-});
+});    
+
+function determineCanProcess() {
+    let canGenPalette = true;
+    let canApplyPalette = true;
+    if(!file) {
+        debugText.textContent = "Cannot process or apply palette, no file.";
+        canGenPalette = false;
+        canApplyPalette = false;
+    } else if(validFileTypes.indexOf(file.type + "") < 0) {
+        debugText.textContent = "Cannot process or apply palette, wrong file type.";
+        canGenPalette = false;
+        canApplyPalette = false;
+    } else if (genColorNum == 0) {
+        debugText.textContent = "Cannot process. No generation colours. Can apply palette"
+        canGenPalette = false;
+    } else {
+        debugText.textContent = "Can process. Filetype: " + file.type + ". Colors: " + genColorNum + ". Mode: " + (speedMode ? "Fast" : "Accurate") + ".";
+    }
+    generatePaletteButton.disabled = !canGenPalette;
+    applyPaletteButton.disabled = !canApplyPalette; 
+
+    return [canGenPalette, canApplyPalette];
+}
 
 fastAccurateSwitch.addEventListener('change', function() {
     speedMode = !fastAccurateSwitch.checked;
@@ -120,18 +167,21 @@ customScaleInput.addEventListener('change', function() {
     let newH = imageHeight * customScaleInput.value
 
     if(newW < 1) {
+        console.log("newW was " + newW + ". correcting.");
         customScaleInput.value = Math.ceil(1 / imageWidth);
         newW = 1;
-    }
-    else if(newW > maxSingleAxisRes) {
+    } else if(newW > maxSingleAxisRes) {
+        console.log("newW was " + newW + ". correcting.");
         customScaleInput.value = Math.floor(maxSingleAxisRes / imageWidth);
         newW = maxSingleAxisRes;
     }
+    
     if(newH < 1) {
+        console.log("newH was " + newH + ". correcting.");
         customScaleInput.value = Math.ceil(1 / imageHeight);
         newH = 1;
-    }
-    else if(newH > maxSingleAxisRes) {
+    } else if(newH > maxSingleAxisRes) {
+        console.log("newH was " + newH + ". correcting.");
         customScaleInput.value = Math.floor(maxSingleAxisRes / imageHeight);
         newH = maxSingleAxisRes;
     }
@@ -169,6 +219,7 @@ function recalculateGenNum() {
         if(genColorIndices[i - 1])
             genColorNum++;
     }
+    determineCanProcess();
 }
 
 // by default all colors are to be generated
@@ -204,6 +255,10 @@ for(let i = 1; i <= 15; i++) {
         }
         console.log("number to be generated: " + genColorNum);
     })
+
+    colorInputs[i - 1].addEventListener('change', function() {
+        quantize();
+    })
 }
 
 allDefaultButton.addEventListener('click', function(){
@@ -227,6 +282,56 @@ allGenerateButton.addEventListener('click', function(){
     }
     recalculateGenNum();
 });
+
+generatePaletteButton.addEventListener('click', function() {
+    console.log("gen hit.");
+    let nonGenPalette = [];
+    for(let i = 0; i < 15; i++) {
+        if(colorSelectors[i].value != "generate") {
+            nonGenPalette.push(colorInputs[i].value);
+        }
+    }
+
+    getDataFromElement(originalImage, speedMode).then(() => {
+        genPalette(genColorNum, maxIterations, debugText).then(value =>{
+            console.log("pal: " + value);
+    
+            for(let i = 0; i < 15; i++) {
+                if(colorSelectors[i].value == "generate") {
+                    let newColStr = value.pop();
+                    colorInputs[i].value = newColStr
+                    fullColorPalette[i] = newColStr;
+                }
+            }
+        });
+    });
+
+})
+
+applyPaletteButton.addEventListener('click', function() {
+    console.log("apply hit.");
+    for(let i = 0; i < 15; i++) {
+        fullColorPalette[i] = colorInputs[i].value;
+    }
+    if(determineCanProcess()[1]) {
+        quantize();
+    }
+})
+
+// call the typescript function properly
+function quantize(){
+    console.log("Quantizing with width " + targetResolution[0] + " height " + targetResolution[1]);
+    console.log(fullColorPalette[0]);
+    getDataFromElement(originalImage, speedMode).then(() => {
+        console.log("done getting data");
+        quantizeAndDisplay(processedImage, debugText, fullColorPalette, targetResolution[0], targetResolution[1]).then(() => {
+            console.log("Palette: " + fullColorPalette);
+            processedImage.style.display = 'block'; 
+            debugText.textContent = "Completed";
+            console.log("done out here");
+        })
+    })
+}
 
 // make image process button work
 // mark image preview as old on palette gen data change
