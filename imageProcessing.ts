@@ -392,7 +392,7 @@ function displayImageFromArray(colors: Color[], displayElement: HTMLImageElement
 }
 
 // running this assumes dataGotten has been called
-async function quantizeAndDisplay(outputImgElement: HTMLImageElement, debugLabel: HTMLLabelElement, strPalette: String[], _width: number, _height: number) {
+async function quantizeAndDisplay(outputImgElement: HTMLImageElement, debugLabel: HTMLLabelElement, strPalette: String[], _width: number, _height: number): Promise<String[]> {
 
     let palette: Color[] = [];
     strPalette.forEach(strCol => {
@@ -417,32 +417,27 @@ async function quantizeAndDisplay(outputImgElement: HTMLImageElement, debugLabel
     let outputImageSpriteString = outputImgString;
     debugLabel.textContent = "Adding text: 0/" + _height;
 
-    async function insertPiece(piece: string) {
-        outputImageSpriteString += piece;
-        if(piece == undefined || piece == 'undefined' || piece === undefined || piece === 'undefined') 
-            console.log("problematic data");
-        await new Promise(resolve => setTimeout(resolve, 0));
-    }
-
     // #FIXME: always 127 alpha cutoff?
     let temp = ""
-    let lineSize = width * 200;
+    let lineSize = width * 100;
     const colorTrans = new Color(0, 0, 0, 0);
     const colorBlack = new Color(0, 0, 0, 255);
     const colorWhite = new Color(255, 255, 255, 255);
 
+    let outputStrerngs: String[] = [];
+
     for(let _y = 0; _y < _height; _y++) {
         for(let _x = 0; _x < _width; _x++) {
-            let y = _y * (height / _height);
-            let x = _x * (width / _width);
-            let dataIndex = y * width + x;
+            let y = Math.floor(_y * (height / _height));
+            let x = Math.floor(_x * (width / _width));
+            let inputDataIndex = y * width + x;
             let outputDataIndex = _y * _width + _x;
 
-            if(imageColorData[dataIndex].A < 127) {
+            if(imageColorData[inputDataIndex].A < 127) {
                 outputImageColorData.push(colorWhite); // #FIXME: use black for transparency? white?
                 temp += "0"
             }else {
-                let nearIndex = imageColorData[dataIndex].nearestInPaletteIndex(palette);
+                let nearIndex = imageColorData[inputDataIndex].nearestInPaletteIndex(palette);
                 outputImageColorData.push(palette[nearIndex]); 
                 temp += (nearIndex + 1).toString(16); 
             }
@@ -452,12 +447,18 @@ async function quantizeAndDisplay(outputImgElement: HTMLImageElement, debugLabel
                 temp += "\n";
     
             if(_x % lineSize == 0) {
-                if(_y % 50 == 0) 
+                if(_y % 50 == 0) {
                     debugLabel.textContent = "Adding text: " + _y + "/" + _height;
-                await insertPiece(temp);
+                    await new Promise(resolve => setTimeout(resolve, 0));
+                }
+                outputStrerngs.push(temp);
                 temp = ""
             }
         }
+    }
+    
+    for(let i = 0; i < outputStrerngs.length; i++) {
+        outputImageSpriteString += outputStrerngs[i];
     }
 
     //for(let i = 0; i < imageColorData.length; i++) {

@@ -69,10 +69,14 @@
             padding: 10px;
             border: 1px solid #ccc;
             display: inline-block;
+            white-space: nowrap;
             margin: 5px;
         }
         .option.selected {
             background-color: #ddd;
+        }
+        .option label {
+            display: inline;
         }
         .color-select-container {
             display: grid;
@@ -86,22 +90,22 @@
             width: 95%;
             box-sizing: border-box; 
         }
-        .output-image-container {
+        .output-image-container-parent {
             display: flex;
-            justify-content: space-around;
-            width: 80%;
-            margin: 20px 0;
+            width: 100%;
+            height: 400px;
+            justify-content: center;
         }
-        .output-image-container-image {
-            flex: none;
+        .output-image-container {
             width: 45%;
-            max-height: 500px;
+            height: 100%;
         }
-        .output-image-container-image img {
-            max-width: 100%;
-            max-height: 90%;
-            height: auto;
+        .output-image-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
             display: none;
+            object-position: 0 50%;
         }
     </style>
 </head>
@@ -139,6 +143,7 @@
             <input type="radio" id="res-option-2" name="option" value="2" onclick="setResolutionMode(2)"> 
             Custom Scale
             <input type="number" id="custom-scale" value="1" step="0.1" disabled>
+            <label id="custom-scale-value-text"></label>
         </label>
         <div></div>
         <label class="option">
@@ -286,12 +291,12 @@
         <label id="debugText">Debug Text</label>
     </div>
 
-    <div class="output-image-container">
-        <div class="output-image-container-image">
+    <div class="output-image-container-parent">
+        <div class="output-image-container">
             <h3>Original Image</h3>
             <img src="original.jpg" alt="Original Image" id="original-image">
         </div>
-        <div class="output-image-container-image">
+        <div class="output-image-container">
             <h3>Processed Image</h3>
             <img src="processed.jpg" alt="Processed Image" id="processed-image">
         </div>

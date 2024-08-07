@@ -2,9 +2,16 @@
 const fileUploadInput = document.getElementById('file-upload');
 const fastAccurateSwitch = document.getElementById('toggle-switch');
 const maxIterationInput = document.getElementById('max-iterations');
+
 const customScaleInput = document.getElementById('custom-scale');
 const customWidthInput = document.getElementById('custom-width');
 const customHeightInput = document.getElementById('custom-height');
+
+const resOption1 = document.getElementById('res-option-1');
+const resOption2 = document.getElementById('res-option-2');
+const resOption3 = document.getElementById('res-option-3');
+
+const customScaleDisplayText = document.getElementById('custom-scale-value-text');
 
 const colorSelectors = [];
 for (let i = 1; i <= 15; i++) {
@@ -27,9 +34,6 @@ const allGenerateButton = document.getElementById('all-generate-button');
 
 const infoButton = document.getElementById('info-button');
 
-const resOption1 = document.getElementById('res-option-1');
-const resOption2 = document.getElementById('res-option-2');
-const resOption3 = document.getElementById('res-option-3');
 
 // some config variables 
 const validFileTypes = [
@@ -68,7 +72,7 @@ let imageHeight = 1;
 console.log("starting...")
 
 function setTargetRes(x, y) {
-    targetResolution = [x, y];
+    targetResolution = [Math.floor(x), Math.floor(y)];
     console.log("targetResolution set to: " + targetResolution[0] + ", " + targetResolution[1]);
 }
 
@@ -104,6 +108,7 @@ fileUploadInput.addEventListener('change', function() {
                     console.log("width: " + imageWidth + " height: " + imageHeight)
                     toggleProcessingMode(false);
                     determineCanProcess(); //do again since toggleProcessingMode will have messed with things.
+                    customScaleDisplayText.textContent = Math.floor(customScaleInput.value * imageWidth) + "x" + Math.floor(customScaleInput.value * imageHeight);
                 }
             }
         };
@@ -165,6 +170,7 @@ function setResolutionMode(selectionNumber) {
             customWidthInput.disabled = true;
             customHeightInput.disabled = true;
             setTargetRes(imageWidth * customScaleInput.value, imageHeight * customScaleInput.value);
+            customScaleDisplayText.textContent = targetResolution[0] + "x" + targetResolution[1];
             break;
         case 3:
             customScaleInput.disabled = true;
@@ -201,6 +207,7 @@ customScaleInput.addEventListener('change', function() {
     }
 
     setTargetRes(newW, newH);
+    customScaleDisplayText.textContent = targetResolution[0] + "x" + targetResolution[1];
 });
 
 function clampSingleAxisRes(inputResVal) {
@@ -342,7 +349,9 @@ function quantize(){
     console.log(fullColorPalette[0]);
     getDataFromElement(originalImage, speedMode).then(() => {
         console.log("done getting data");
-        quantizeAndDisplay(processedImage, debugText, fullColorPalette, targetResolution[0], targetResolution[1]).then(() => {
+        quantizeAndDisplay(processedImage, debugText, fullColorPalette, targetResolution[0], targetResolution[1]).then(([outputPaletteString, outputImageSpriteString]) => {
+            //const [outputPaletteString, outputImageSpriteString] = result;
+            console.log(outputPaletteString);
             console.log("Palette: " + fullColorPalette);
             processedImage.style.display = 'block'; 
             debugText.textContent = "Completed";

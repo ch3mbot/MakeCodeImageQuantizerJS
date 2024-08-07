@@ -317,6 +317,8 @@ function displayImageFromArray(colors, displayElement, imgWidth, imgHeight) {
     }
     ctx.putImageData(imageData, 0, 0);
     displayElement.src = canvas.toDataURL();
+    // displayElement.width = width;
+    // displayElement.height = height;
 }
 // running this assumes dataGotten has been called
 function quantizeAndDisplay(outputImgElement, debugLabel, strPalette, _width, _height) {
@@ -339,32 +341,25 @@ function quantizeAndDisplay(outputImgElement, debugLabel, strPalette, _width, _h
         let outputImgString = "let mySprite = sprites.create(img`\n";
         let outputImageSpriteString = outputImgString;
         debugLabel.textContent = "Adding text: 0/" + _height;
-        function insertPiece(piece) {
-            return __awaiter(this, void 0, void 0, function* () {
-                outputImageSpriteString += piece;
-                if (piece == undefined || piece == 'undefined' || piece === undefined || piece === 'undefined')
-                    console.log("problematic data");
-                yield new Promise(resolve => setTimeout(resolve, 0));
-            });
-        }
         // #FIXME: always 127 alpha cutoff?
         let temp = "";
-        let lineSize = width * 200;
+        let lineSize = width * 100;
         const colorTrans = new Color(0, 0, 0, 0);
         const colorBlack = new Color(0, 0, 0, 255);
         const colorWhite = new Color(255, 255, 255, 255);
+        let outputStrerngs = [];
         for (let _y = 0; _y < _height; _y++) {
             for (let _x = 0; _x < _width; _x++) {
-                let y = _y * (height / _height);
-                let x = _x * (width / _width);
-                let dataIndex = y * width + x;
+                let y = Math.floor(_y * (height / _height));
+                let x = Math.floor(_x * (width / _width));
+                let inputDataIndex = y * width + x;
                 let outputDataIndex = _y * _width + _x;
-                if (imageColorData[dataIndex].A < 127) {
+                if (imageColorData[inputDataIndex].A < 127) {
                     outputImageColorData.push(colorWhite); // #FIXME: use black for transparency? white?
                     temp += "0";
                 }
                 else {
-                    let nearIndex = imageColorData[dataIndex].nearestInPaletteIndex(palette);
+                    let nearIndex = imageColorData[inputDataIndex].nearestInPaletteIndex(palette);
                     outputImageColorData.push(palette[nearIndex]);
                     temp += (nearIndex + 1).toString(16);
                 }
@@ -372,12 +367,17 @@ function quantizeAndDisplay(outputImgElement, debugLabel, strPalette, _width, _h
                 if (_x == 0 && _x != 0)
                     temp += "\n";
                 if (_x % lineSize == 0) {
-                    if (_y % 50 == 0)
+                    if (_y % 50 == 0) {
                         debugLabel.textContent = "Adding text: " + _y + "/" + _height;
-                    yield insertPiece(temp);
+                        yield new Promise(resolve => setTimeout(resolve, 0));
+                    }
+                    outputStrerngs.push(temp);
                     temp = "";
                 }
             }
+        }
+        for (let i = 0; i < outputStrerngs.length; i++) {
+            outputImageSpriteString += outputStrerngs[i];
         }
         //for(let i = 0; i < imageColorData.length; i++) {
         //}
