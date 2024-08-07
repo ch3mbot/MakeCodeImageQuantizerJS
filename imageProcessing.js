@@ -330,13 +330,13 @@ function quantizeAndDisplay(outputImgElement, debugLabel, strPalette, _width, _h
         console.log("attempting quantizing");
         let startTime = new Date().getTime();
         // #FIXME modify palette text to not include screen size text
-        let paletteText = "namespace userconfig {\n    export const ARCADE_SCREEN_WIDTH = " + _width + "\n    export const ARCADE_SCREEN_HEIGHT = " + _height + "\n}\nimage.setPalette(hex`000000";
+        let outputScreenSizeString = "namespace userconfig {\n    export const ARCADE_SCREEN_WIDTH = " + _width + "\n    export const ARCADE_SCREEN_HEIGHT = " + _height + "\n}\n";
+        let outputPaletteString = "image.setPalette(hex`000000";
         for (let i = 0; i < palette.length; i++) {
             //console.log(palette[i].R  + ", " + palette[i].G + ", " + palette[i].B);
-            paletteText += palette[i].toHex();
+            outputPaletteString += palette[i].toHex();
         }
-        paletteText += "`);\n";
-        let outputPaletteString = paletteText;
+        outputPaletteString += "`);\n";
         let outputImageColorData = [];
         let outputImgString = "let mySprite = sprites.create(img`\n";
         let outputImageSpriteString = outputImgString;
@@ -387,7 +387,7 @@ function quantizeAndDisplay(outputImgElement, debugLabel, strPalette, _width, _h
         console.log("time for text gen: " + (endTime - startTime));
         console.log("Done text");
         displayImageFromArray(outputImageColorData, outputImgElement, _width, _height);
-        return [outputPaletteString, outputImageSpriteString];
+        return [outputScreenSizeString, outputPaletteString, outputImageSpriteString];
     });
 }
 function genPalette(k, maxIterations, debugLabel, nonGenPalette) {

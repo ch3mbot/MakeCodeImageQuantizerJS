@@ -34,6 +34,7 @@ const allGenerateButton = document.getElementById('all-generate-button');
 
 const infoButton = document.getElementById('info-button');
 
+const copyStringButtonScreenSize = document.getElementById('copy-screen-size-string')
 const copyStringButtonPalette = document.getElementById('copy-palette-string')
 const copyStringButtonSprite = document.getElementById('copy-sprite-string')
 
@@ -87,6 +88,7 @@ generatePaletteButton.disabled = true;
 applyPaletteButton.disabled = true;
 
 // no data at the start
+copyStringButtonScreenSize.disabled = true;
 copyStringButtonPalette.disabled = true;
 copyStringButtonSprite.disabled = true;
 
@@ -100,9 +102,10 @@ fileUploadInput.addEventListener('change', function() {
     let newFile = fileUploadInput.files[0];
     if (newFile) {
         file = newFile;
-        
+
         toggleProcessingMode(true);
         dataCreated = false;
+        copyStringButtonScreenSize.disabled = !dataCreated;
         copyStringButtonPalette.disabled = !dataCreated;
         copyStringButtonSprite.disabled = !dataCreated;
 
@@ -325,6 +328,7 @@ generatePaletteButton.addEventListener('click', function() {
     toggleProcessingMode(true);
     
     dataCreated = false;
+    copyStringButtonScreenSize.disabled = !dataCreated;
     copyStringButtonPalette.disabled = !dataCreated;
     copyStringButtonSprite.disabled = !dataCreated;
 
@@ -357,6 +361,7 @@ applyPaletteButton.addEventListener('click', function() {
     console.log("apply hit.");
 
     dataCreated = false;
+    copyStringButtonScreenSize.disabled = !dataCreated;
     copyStringButtonPalette.disabled = !dataCreated;
     copyStringButtonSprite.disabled = !dataCreated;
 
@@ -375,10 +380,11 @@ function quantize(){
     console.log(fullColorPalette[0]);
     getDataFromElement(originalImage, speedMode).then(() => {
         console.log("done getting data");
-        quantizeAndDisplay(processedImage, debugText, fullColorPalette, targetResolution[0], targetResolution[1]).then(([outputPaletteString, outputImageSpriteString]) => {
+        quantizeAndDisplay(processedImage, debugText, fullColorPalette, targetResolution[0], targetResolution[1]).then(([outputScreenSizeString, outputPaletteString, outputImageSpriteString]) => {
             console.log(outputPaletteString);
-            dataStrings[0] = outputPaletteString;
-            dataStrings[1] = outputImageSpriteString;
+            dataStrings[0] = outputScreenSizeString;
+            dataStrings[1] = outputPaletteString;
+            dataStrings[2] = outputImageSpriteString;
             console.log("Palette: " + fullColorPalette);
             processedImage.style.display = 'block'; 
             debugText.textContent = "Completed";
@@ -386,6 +392,7 @@ function quantize(){
             toggleProcessingMode(false);
 
             dataCreated = true;
+            copyStringButtonScreenSize.disabled = !dataCreated;
             copyStringButtonPalette.disabled = !dataCreated;
             copyStringButtonSprite.disabled = !dataCreated;
         })
@@ -422,18 +429,22 @@ function toggleProcessingMode(processing){
     }
 }
 
+copyStringButtonScreenSize.addEventListener('click', function() { 
+    copyStringToClipboard(dataStrings[0], "Copied screen size config string to clipboard.")
+});
+
 copyStringButtonPalette.addEventListener('click', function() { 
-    copyStringToClipboard(dataStrings[0])
+    copyStringToClipboard(dataStrings[1], "Copied palette string to clipboard.")
 });
 
 copyStringButtonSprite.addEventListener('click', function() { 
-    copyStringToClipboard(dataStrings[1])
+    copyStringToClipboard(dataStrings[2], "Copied sprite string to clipboard.")
 });
 
-function copyStringToClipboard(copyStr) {
+function copyStringToClipboard(copyStr, copyMsg) {
     navigator.clipboard.writeText(copyStr).then(() => {
         // Show popup message
-        alert('Copied');
+        alert(copyMsg);
     }).catch(err => {
         console.error('Failed to copy: ', err);
     });
