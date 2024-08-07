@@ -408,7 +408,7 @@ async function quantizeAndDisplay(outputImgElement: HTMLImageElement, debugLabel
         //console.log(palette[i].R  + ", " + palette[i].G + ", " + palette[i].B);
         paletteText += palette[i].toHex();
     }
-    paletteText += "`);";
+    paletteText += "`);\n";
     let outputPaletteString = paletteText;
 
     let outputImageColorData: Color[] = [];
@@ -443,8 +443,9 @@ async function quantizeAndDisplay(outputImgElement: HTMLImageElement, debugLabel
             }
     
             // make text show up in chunks
-            if(_x == 0 && _x != 0)
+            if(_x == 0 && _y != 0) {
                 temp += "\n";
+            }
     
             if(_x % lineSize == 0) {
                 if(_y % 50 == 0) {
@@ -463,7 +464,7 @@ async function quantizeAndDisplay(outputImgElement: HTMLImageElement, debugLabel
 
     //for(let i = 0; i < imageColorData.length; i++) {
     //}
-    outputImageSpriteString += "`, SpriteKind.Player);";
+    outputImageSpriteString += "`, SpriteKind.Player);\n";
     let endTime = new Date().getTime();
     console.log("time for text gen: " + (endTime - startTime));
     console.log("Done text");

@@ -34,6 +34,8 @@ const allGenerateButton = document.getElementById('all-generate-button');
 
 const infoButton = document.getElementById('info-button');
 
+const copyStringButtonPalette = document.getElementById('copy-palette-string')
+const copyStringButtonSprite = document.getElementById('copy-sprite-string')
 
 // some config variables 
 const validFileTypes = [
@@ -69,6 +71,10 @@ let previousDisabledStatus = {
 let imageWidth = 1;
 let imageHeight = 1;
 
+// store string representing palette and image strings
+const dataStrings = [];
+let dataCreated = false;
+
 console.log("starting...")
 
 function setTargetRes(x, y) {
@@ -80,16 +86,26 @@ function setTargetRes(x, y) {
 generatePaletteButton.disabled = true;
 applyPaletteButton.disabled = true;
 
-// instructions on how to use 
+// no data at the start
+copyStringButtonPalette.disabled = true;
+copyStringButtonSprite.disabled = true;
+
+// instructions on how to use #FIXME add these
 infoButton.addEventListener('change', function() {
 
 })
 
 // handling number input changes
 fileUploadInput.addEventListener('change', function() {
-    toggleProcessingMode(true);
-    file = fileUploadInput.files[0];
-    if (file) {
+    let newFile = fileUploadInput.files[0];
+    if (newFile) {
+        file = newFile;
+        
+        toggleProcessingMode(true);
+        dataCreated = false;
+        copyStringButtonPalette.disabled = !dataCreated;
+        copyStringButtonSprite.disabled = !dataCreated;
+
         originalImage.style.display = 'none'
         processedImage.style.display = 'none'
         const reader = new FileReader();
@@ -307,6 +323,11 @@ allGenerateButton.addEventListener('click', function(){
 generatePaletteButton.addEventListener('click', function() {
     console.log("gen hit.");
     toggleProcessingMode(true);
+    
+    dataCreated = false;
+    copyStringButtonPalette.disabled = !dataCreated;
+    copyStringButtonSprite.disabled = !dataCreated;
+
     let nonGenPalette = [];
     for(let i = 0; i < 15; i++) {
         if(colorSelectors[i].value != "generate") {
@@ -334,6 +355,11 @@ generatePaletteButton.addEventListener('click', function() {
 
 applyPaletteButton.addEventListener('click', function() {
     console.log("apply hit.");
+
+    dataCreated = false;
+    copyStringButtonPalette.disabled = !dataCreated;
+    copyStringButtonSprite.disabled = !dataCreated;
+
     for(let i = 0; i < 15; i++) {
         fullColorPalette[i] = colorInputs[i].value;
     }
@@ -350,13 +376,18 @@ function quantize(){
     getDataFromElement(originalImage, speedMode).then(() => {
         console.log("done getting data");
         quantizeAndDisplay(processedImage, debugText, fullColorPalette, targetResolution[0], targetResolution[1]).then(([outputPaletteString, outputImageSpriteString]) => {
-            //const [outputPaletteString, outputImageSpriteString] = result;
             console.log(outputPaletteString);
+            dataStrings[0] = outputPaletteString;
+            dataStrings[1] = outputImageSpriteString;
             console.log("Palette: " + fullColorPalette);
             processedImage.style.display = 'block'; 
             debugText.textContent = "Completed";
             console.log("done out here");
             toggleProcessingMode(false);
+
+            dataCreated = true;
+            copyStringButtonPalette.disabled = !dataCreated;
+            copyStringButtonSprite.disabled = !dataCreated;
         })
     })
 }
@@ -389,6 +420,23 @@ function toggleProcessingMode(processing){
             element.disabled = previousDisabledStatus[element.id];
         }
     }
+}
+
+copyStringButtonPalette.addEventListener('click', function() { 
+    copyStringToClipboard(dataStrings[0])
+});
+
+copyStringButtonSprite.addEventListener('click', function() { 
+    copyStringToClipboard(dataStrings[1])
+});
+
+function copyStringToClipboard(copyStr) {
+    navigator.clipboard.writeText(copyStr).then(() => {
+        // Show popup message
+        alert('Copied');
+    }).catch(err => {
+        console.error('Failed to copy: ', err);
+    });
 }
 
 // make image process button work
