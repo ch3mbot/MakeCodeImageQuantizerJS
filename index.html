@@ -93,6 +93,7 @@
             margin: 20px 0;
         }
         .output-image-container-image {
+            flex: none;
             width: 45%;
             max-height: 500px;
         }
@@ -109,7 +110,7 @@
         <button id="info-button">How to use</button>
     </div>
     <div class="container">
-        <label for="file-upload">File Upload:</label>
+        <label for="file-upload">Image Upload:</label>
         <input type="file" id="file-upload">
     </div>
 
@@ -130,18 +131,18 @@
     <div class="container">
         <label>Output Resolution:</label>
         <label class="option">
-            <input type="radio" name="option" value="1" onclick="selectOption(1)" checked>
+            <input type="radio" id="res-option-1" name="option" value="1" onclick="setResolutionMode(1)" checked>
             Input Resolution
         </label>
         <div></div>
         <label class="option">
-            <input type="radio" name="option" value="2" onclick="selectOption(2)"> 
+            <input type="radio" id="res-option-2" name="option" value="2" onclick="setResolutionMode(2)"> 
             Custom Scale
             <input type="number" id="custom-scale" value="1" step="0.1" disabled>
         </label>
         <div></div>
         <label class="option">
-            <input type="radio" name="option" value="3" onclick="selectOption(3)">
+            <input type="radio" id="res-option-3" name="option" value="3" onclick="setResolutionMode(3)">
             Custom Width & Height
             <div></div>
             <input type="number" id="custom-width" min="1" value="1" disabled>

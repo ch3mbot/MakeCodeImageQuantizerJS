@@ -27,6 +27,10 @@ const allGenerateButton = document.getElementById('all-generate-button');
 
 const infoButton = document.getElementById('info-button');
 
+const resOption1 = document.getElementById('res-option-1');
+const resOption2 = document.getElementById('res-option-2');
+const resOption3 = document.getElementById('res-option-3');
+
 // some config variables 
 const validFileTypes = [
     "image/png",
@@ -44,13 +48,18 @@ const maxSingleAxisRes = 5000;
 const defaultColorPalette = ["#ffffff","#ff2121","#ff93c4","#ff8135","#fff609","#249ca3","#78dc52","#003fad","#87f2ff","#8e2ec4","#a4839f","#5c406c","#e5cdc4","#91463d","#000000"];
 
 // config choices with default values
-let imageFile; 
+let file; 
 let speedMode = true;
 let maxIterations = 200;
 let targetResolution = [1, 1];
 let genColorNum = 15;
 let genColorIndices = [true, true, true, true, true, true, true, true, true, true, true, true, true, true, true];
 let fullColorPalette = ["#ffffff","#ff2121","#ff93c4","#ff8135","#fff609","#249ca3","#78dc52","#003fad","#87f2ff","#8e2ec4","#a4839f","#5c406c","#e5cdc4","#91463d","#000000"];
+let currentResolutionChoice = 1;
+
+// array of the disabled status of elements, to be stored while processing. format is "element-id":false
+let previousDisabledStatus = {
+}
 
 // data from image
 let imageWidth = 1;
@@ -74,6 +83,7 @@ infoButton.addEventListener('change', function() {
 
 // handling number input changes
 fileUploadInput.addEventListener('change', function() {
+    toggleProcessingMode(true);
     file = fileUploadInput.files[0];
     if (file) {
         originalImage.style.display = 'none'
@@ -90,7 +100,10 @@ fileUploadInput.addEventListener('change', function() {
                     imageHeight = img.height;
                     customWidthInput.value = imageWidth;
                     customHeightInput.value = imageHeight;
+                    setResolutionMode(currentResolutionChoice);
                     console.log("width: " + imageWidth + " height: " + imageHeight)
+                    toggleProcessingMode(false);
+                    determineCanProcess(); //do again since toggleProcessingMode will have messed with things.
                 }
             }
         };
@@ -137,8 +150,9 @@ maxIterationInput.addEventListener('change', function() {
 });
 
 // when one of three resolution modes is selected
-function selectOption(selectionNumber) {
+function setResolutionMode(selectionNumber) {
     console.log("resolution mode selected: " + selectionNumber);
+    currentResolutionChoice = selectionNumber;
     switch(selectionNumber) {
         case 1:
             customScaleInput.disabled = true;
@@ -285,6 +299,7 @@ allGenerateButton.addEventListener('click', function(){
 
 generatePaletteButton.addEventListener('click', function() {
     console.log("gen hit.");
+    toggleProcessingMode(true);
     let nonGenPalette = [];
     for(let i = 0; i < 15; i++) {
         if(colorSelectors[i].value != "generate") {
@@ -303,6 +318,8 @@ generatePaletteButton.addEventListener('click', function() {
                     fullColorPalette[i] = newColStr;
                 }
             }
+
+            toggleProcessingMode(false);
         });
     });
 
@@ -321,6 +338,7 @@ applyPaletteButton.addEventListener('click', function() {
 // call the typescript function properly
 function quantize(){
     console.log("Quantizing with width " + targetResolution[0] + " height " + targetResolution[1]);
+    toggleProcessingMode(true);
     console.log(fullColorPalette[0]);
     getDataFromElement(originalImage, speedMode).then(() => {
         console.log("done getting data");
@@ -329,8 +347,39 @@ function quantize(){
             processedImage.style.display = 'block'; 
             debugText.textContent = "Completed";
             console.log("done out here");
+            toggleProcessingMode(false);
         })
     })
+}
+
+// function that disables and enables all elements while processing.
+function toggleProcessingMode(processing){
+    let relevantElementList = [
+        fileUploadInput,
+        fastAccurateSwitch,
+        maxIterationInput,
+        resOption1,
+        resOption2,
+        resOption3,
+        customScaleInput,
+        customWidthInput,
+        customHeightInput,
+        allGenerateButton,
+        allDefaultButton,
+        generatePaletteButton,
+        applyPaletteButton,
+    ];
+    relevantElementList.push(...colorSelectors);
+    relevantElementList.push(...colorInputs);
+
+    for(let element of relevantElementList) {
+        if (processing) {
+            previousDisabledStatus[element.id] = element.disabled;
+            element.disabled = true;
+        } else {
+            element.disabled = previousDisabledStatus[element.id];
+        }
+    }
 }
 
 // make image process button work

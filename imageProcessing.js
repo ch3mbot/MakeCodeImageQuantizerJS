@@ -317,8 +317,6 @@ function displayImageFromArray(colors, displayElement, imgWidth, imgHeight) {
     }
     ctx.putImageData(imageData, 0, 0);
     displayElement.src = canvas.toDataURL();
-    displayElement.width = width;
-    displayElement.height = height;
 }
 // running this assumes dataGotten has been called
 function quantizeAndDisplay(outputImgElement, debugLabel, strPalette, _width, _height) {
