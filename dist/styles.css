@@ -1,0 +1,139 @@
+
+body {
+    font-family: Arial, sans-serif;
+    margin: 20px;
+}
+.container {
+    margin-top: 20px;
+    margin-bottom: 20px;
+}
+.side-by-side-container {
+    margin-top: 20px;
+    margin-bottom: 20px;
+    display: flex;
+}
+.top-bottom-container {
+    margin-right: 20px; display: flex; flex-direction: column; justify-content: flex-start
+}
+label {
+    display: block;
+    margin-bottom: 5px;
+}
+.toggle-switch {
+    display: flex;
+    align-items: center;
+}
+.toggle-switch input {
+    display: none;
+}
+.toggle-switch label {
+    cursor: pointer;
+    padding: 5px 10px;
+    border: 1px solid #ccc;
+    user-select: none;
+}
+.toggle-switch .switch {
+    display: flex;
+}
+.toggle-switch input:checked + .switch label:nth-child(2),
+.toggle-switch input:not(:checked) + .switch label:nth-child(1) {
+    background-color: #ddd;
+    font-weight: bold;
+}
+.grid {
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    gap: 10px;
+}
+.grid div {
+    padding: 10px;
+    border: 1px solid #ccc;
+}
+.grid div select,
+.grid div input[type="color"] {
+    display: block;
+    margin-top: 5px;
+}
+.side-by-side {
+    display: flex;
+    gap: 20px;
+}
+.side-by-side div {
+    flex: 1;
+    text-align: center;
+}
+.side-by-side img {
+    max-width: 100%;
+    border: 1px solid #ccc;
+}
+.option {
+    cursor: pointer;
+    padding: 10px;
+    border: 1px solid #ccc;
+    display: inline-block;
+    white-space: nowrap;
+    margin: 5px;
+}
+.option.selected {
+    background-color: #ddd;
+}
+.option label {
+    display: inline;
+}
+.color-select-container {
+    display: grid;
+    width: min(1600px, 100%);    
+    grid-template-columns: repeat(8, 1fr);
+    gap: 10px;
+}
+.color-select-container select,
+.color-select-container button,
+.color-select-container input[type="color"] {
+    width: 95%;
+    box-sizing: border-box; 
+}
+.output-image-container-parent {
+    display: flex;
+    width: 100%;
+    height: 400px;
+    justify-content: center;
+}
+.output-image-container {
+    width: 45%;
+    height: 100%;
+}
+.output-image-container img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: none;
+    object-position: 0 50%;
+}
+.introjs-helperLayer {
+    background: transparent;
+}
+.introjs-overlay {
+    opacity: 0 !important;
+}
+.introjs-helperLayer:before {
+    opacity: 0;
+    content: '';
+    position: fixed;
+    width: inherit;
+    height: inherit;
+    border-radius: 0.5em;
+    box-shadow: 0 0 0 1000em rgba(0,0,0, .7);
+    opacity: 1;
+}
+.introjs-helperLayer:after {
+    content: '';
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    position: fixed;
+    z-index: 1000;
+}
+.file-upload-container {
+    width: 300px;
+}
