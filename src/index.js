@@ -473,4 +473,14 @@ function copyStringToClipboard(copyStr, copyMsg) {
     });
 }
 
-// end of normal code
+resOption1.addEventListener('click', function() {
+    setResolutionMode(1);
+});
+
+resOption2.addEventListener('click', function() {
+    setResolutionMode(2);
+});
+
+resOption3.addEventListener('click', function() {
+    setResolutionMode(3);
+});
