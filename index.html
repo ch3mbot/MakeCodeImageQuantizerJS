@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UI Elements</title>
+    <link rel="stylesheet" href="styles.css">
+    
+</head>
+<body>
+    <div class="container">
+        <button id="info-button">How to use</button>
+    </div>
+    <div class="file-upload-container" data-intro="Click hereto upload your image file.<br/>Should be a png, jpg, or jpeg.">
+        <label for="file-upload" >Image Upload:</label>
+        <input type="file" id="file-upload">
+    </div>
+    
+    <div class="side-by-side-container">
+        <div class="top-bottom-container"> 
+            <div class="container" data-intro="Swap between fast mode and accurate mode.<br/>Fast mode is usually fine.">
+                <label for="toggle-switch-parent">Fast Mode Toggle:</label>
+                <div class="toggle-switch" id="toggle-switch-parent">
+                    <input type="checkbox" id="toggle-switch">
+                    <div class="switch">
+                        <label for="toggle-switch" id="fast-label">Fast</label>
+                        <label for="toggle-switch" id="accurate-label">Accurate</label>
+                    </div>
+                </div>
+            </div>
+        
+            <div class="container" data-intro="Maximum number of <br/>k-means clustering palette generation iterations.<br/>Lower if palette generation takes too long.">
+                <label for="max-iterations">Max Iterations:</label>
+                <input type="number" id="max-iterations" min="1" max="500" value="200">
+            </div>
+        </div>
+        
+        <div class="container" data-intro="Output resolution section.
+        <br/>Input resolution keeps the image the same size.
+        <br/>Custom scale resizes the whole image proportionally.
+        <br/>Custom width and height allows any output size, including stretching the image.">
+            <label>Output Resolution:</label>
+            <label class="option">
+                <input type="radio" id="res-option-1" name="option" value="1" checked>
+                Input Resolution
+            </label>
+            <div></div>
+            <label class="option">
+                <input type="radio" id="res-option-2" name="option" value="2"> 
+                Custom Scale
+                <input type="number" id="custom-scale" value="1" step="0.1" disabled>
+                <label id="custom-scale-value-text"></label>
+            </label>
+            <div></div>
+            <label class="option">
+                <input type="radio" id="res-option-3" name="option" value="3">
+                Custom Width & Height
+                <div></div>
+                <input type="number" id="custom-width" min="1" value="1" disabled>
+                x
+                <input type="number" id="custom-height" min="1" value="1" disabled>
+            </label>
+        </div>
+    </div>
+    
+
+    <div class="color-select-container" data-intro="Palette generation settings. This controls the colour palette.
+    <br/>Each color can be set to generate, custom, or default.
+    <br/>Generate allows the palette generator to control that color.
+    <br/>Custom allows any color to be set.
+    <br/>Default matches makecode arcade.">
+        <div>
+            <button id="all-default-button">Set all to default</button>
+            <button id="all-generate-button">Set all to generate</button>
+        </div>
+        <div>
+            <select id="select-1">
+                <option value="generate">Generate</option>
+                <option value="custom">Custom</option>
+                <option value="default">Default</option>
+            </select>
+            <input type="color" id="color-1">
+        </div>
+        <div>
+            <select id="select-2">
+                <option value="generate">Generate</option>
+                <option value="custom">Custom</option>
+                <option value="default">Default</option>
+            </select>
+            <input type="color" id="color-2">
+        </div>
+        <div>
+            <select id="select-3">
+                <option value="generate">Generate</option>
+                <option value="custom">Custom</option>
+                <option value="default">Default</option>
+            </select>
+            <input type="color" id="color-3">
+        </div>
+        <div>
+            <select id="select-4">
+                <option value="generate">Generate</option>
+                <option value="custom">Custom</option>
+                <option value="default">Default</option>
+            </select>
+            <input type="color" id="color-4">
+        </div>
+        <div>
+            <select id="select-5">
+                <option value="generate">Generate</option>
+                <option value="custom">Custom</option>
+                <option value="default">Default</option>
+            </select>
+            <input type="color" id="color-5">
+        </div>
+        <div>
+            <select id="select-6">
+                <option value="generate">Generate</option>
+                <option value="custom">Custom</option>
+                <option value="default">Default</option>
+            </select>
+            <input type="color" id="color-6">
+        </div>
+        <div>
+            <select id="select-7">
+                <option value="generate">Generate</option>
+                <option value="custom">Custom</option>
+                <option value="default">Default</option>
+            </select>
+            <input type="color" id="color-7">
+        </div>
+        <div>
+            <select id="select-8">
+                <option value="generate">Generate</option>
+                <option value="custom">Custom</option>
+                <option value="default">Default</option>
+            </select>
+            <input type="color" id="color-8">
+        </div>
+        <div>
+            <select id="select-9">
+                <option value="generate">Generate</option>
+                <option value="custom">Custom</option>
+                <option value="default">Default</option>
+            </select>
+            <input type="color" id="color-9">
+        </div>
+        <div>
+            <select id="select-10">
+                <option value="generate">Generate</option>
+                <option value="custom">Custom</option>
+                <option value="default">Default</option>
+            </select>
+            <input type="color" id="color-10">
+        </div>
+        <div>
+            <select id="select-11">
+                <option value="generate">Generate</option>
+                <option value="custom">Custom</option>
+                <option value="default">Default</option>
+            </select>
+            <input type="color" id="color-11">
+        </div>
+        <div>
+            <select id="select-12">
+                <option value="generate">Generate</option>
+                <option value="custom">Custom</option>
+                <option value="default">Default</option>
+            </select>
+            <input type="color" id="color-12">
+        </div>
+        <div>
+            <select id="select-13">
+                <option value="generate">Generate</option>
+                <option value="custom">Custom</option>
+                <option value="default">Default</option>
+            </select>
+            <input type="color" id="color-13">
+        </div>
+        <div>
+            <select id="select-14">
+                <option value="generate">Generate</option>
+                <option value="custom">Custom</option>
+                <option value="default">Default</option>
+            </select>
+            <input type="color" id="color-14">
+        </div>
+        <div>
+            <select id="select-15">
+                <option value="generate">Generate</option>
+                <option value="custom">Custom</option>
+                <option value="default">Default</option>
+            </select>
+            <input type="color" id="color-15">
+        </div>
+    </div>
+    <div class="container">
+        <button id="generate-palette" data-intro="This generates a palette for the image, replacing colors that are set to generate.">Generate Palette</button>
+        <button id="apply-palette" data-intro="This applies the palette to the image.">Apply Palette</button>
+        <button id="copy-screen-size-string" data-intro="This copies the screen size configuration to clipboard, to be pasted in makecode arcade javascript.">Copy Screen Size Config String to Clipboard</button>
+        <button id="copy-palette-string" data-intro="This copies the palette configuration to clipboard.">Copy Palette String to Clipboard</button>
+        <button id="copy-sprite-string" data-intro="This copies the sprite code to clipboard.">Copy Sprite String to Clipboard</button>
+    </div>
+
+    <div class="container">
+        <label id="debugText">Debug Text</label>
+    </div>
+
+    <div class="output-image-container-parent">
+        <div class="output-image-container">
+            <h3>Original Image</h3>
+            <img src="original.jpg" alt="Original Image" id="original-image">
+        </div>
+        <div class="output-image-container">
+            <h3>Processed Image</h3>
+            <img src="processed.jpg" alt="Processed Image" id="processed-image">
+        </div>
+    </div>
+
+    <script src="./imageProcessing.bundle.js"></script>
+    <script src="./index.bundle.js"></script>
+</body>
+</html>
